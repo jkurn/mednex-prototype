@@ -110,7 +110,7 @@ export default function KepalaDashboard() {
           <div>
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-['DM_Sans'] text-lg font-semibold text-[var(--foreground)]">Performa Tim</h2>
-              <button className="text-sm text-[var(--primary)] font-medium">Lihat Semua →</button>
+              <button onClick={() => navigate("/klaim")} className="text-sm text-[var(--primary)] font-medium hover:underline">Lihat Semua →</button>
             </div>
             <div className="bg-white rounded-xl border border-[var(--border)] overflow-hidden">
               <div className="grid grid-cols-5 gap-4 px-5 py-3 bg-[var(--muted)] text-[10px] font-semibold tracking-[1px] text-[var(--muted-foreground)] font-mono uppercase">

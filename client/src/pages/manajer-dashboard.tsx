@@ -144,7 +144,7 @@ export default function ManajerDashboard() {
             <div className="bg-white rounded-xl border border-[var(--border)] p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="font-['DM_Sans'] text-lg font-semibold text-[var(--foreground)]">Top Provider Berisiko</h2>
-                <button className="text-sm text-[var(--primary)] font-medium">Lihat Semua →</button>
+                <button onClick={() => navigate("/provider-tarif")} className="text-sm text-[var(--primary)] font-medium hover:underline">Lihat Semua →</button>
               </div>
               <div className="space-y-4">
                 {riskyProviders.map((p, i) => (

@@ -323,7 +323,7 @@ export default function PemegangPolisPage() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" side="bottom" className="w-72">
                     <DropdownMenuItem 
-                      onClick={() => alert('👥 ENDORSEMEN PESERTA\n\nTambah, hapus, dan/atau ubah data Peserta...')}
+                      onClick={() => setLocation('/daftar-peserta')}
                       className="flex flex-col items-start py-2"
                       data-testid="menu-endorsemen-peserta"
                     >
@@ -334,7 +334,7 @@ export default function PemegangPolisPage() {
                       <span className="text-xs text-slate-500 pl-6">Tambah, hapus, dan/atau ubah data Peserta</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem 
-                      onClick={() => alert('📋 ENDORSEMEN KLAUSULA\n\nEndorse ketentuan Polis tertentu...')}
+                      onClick={() => setLocation('/daftar-polis')}
                       className="flex flex-col items-start py-2"
                       data-testid="menu-endorsemen-klausula"
                     >

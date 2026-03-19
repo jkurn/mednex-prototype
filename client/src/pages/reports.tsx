@@ -60,7 +60,7 @@ export default function Reports() {
           <button onClick={() => navigate("/daftar-peserta")} className="w-full flex items-center gap-3 px-4 h-10 rounded-lg text-[var(--sidebar-foreground)] text-sm hover:bg-[var(--sidebar-accent)] transition">
             👥 Peserta
           </button>
-          <button onClick={() => navigate("/laporan")} className="w-full flex items-center gap-3 px-4 h-10 rounded-lg bg-[var(--sidebar-accent)] text-[#FEFCF4] text-sm font-medium">
+          <button onClick={() => navigate("/reports")} className="w-full flex items-center gap-3 px-4 h-10 rounded-lg bg-[var(--sidebar-accent)] text-[#FEFCF4] text-sm font-medium">
             📊 Laporan
           </button>
         </nav>
@@ -83,11 +83,11 @@ export default function Reports() {
               <p className="text-sm text-[var(--muted-foreground)] mt-1">Maret 2026</p>
             </div>
             <div className="flex items-center gap-3">
-              <button className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white border border-[var(--border)] text-sm text-[var(--foreground)]">
+              <button onClick={() => {}} className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white border border-[var(--border)] text-sm text-[var(--foreground)] hover:bg-[var(--muted)] transition cursor-pointer">
                 Periode: 30 Hari
                 <ChevronDown className="w-4 h-4 text-[var(--muted-foreground)]" />
               </button>
-              <button className="flex items-center gap-2 px-4 h-10 rounded-lg bg-[var(--primary)] text-[var(--primary-foreground)] text-sm font-medium">
+              <button onClick={() => window.print()} className="flex items-center gap-2 px-4 h-10 rounded-lg bg-[var(--primary)] text-[var(--primary-foreground)] text-sm font-medium hover:opacity-90 transition cursor-pointer">
                 <FileDown className="w-4 h-4" />
                 Export PDF
               </button>
