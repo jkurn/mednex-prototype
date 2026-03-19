@@ -23,7 +23,7 @@ export default function LoginForm() {
       const success = await login(email, password);
       if (success) {
         sessionStorage.removeItem('dashboardScrollPosition');
-        
+
         toast({
           title: "Login Successful",
           description: "Welcome to Strator MedNex",
@@ -32,7 +32,7 @@ export default function LoginForm() {
       } else {
         toast({
           title: "Login Failed",
-          description: "Invalid credentials. Please use demouser@strator-ai.com / strator2025",
+          description: "Invalid credentials. Please try again.",
           variant: "destructive",
         });
       }
@@ -59,14 +59,13 @@ export default function LoginForm() {
             </div>
             <p className="text-slate-600 text-base mb-4">Health Claims Intelligence Platform</p>
             <div className="border-b-2 border-slate-300 mb-6"></div>
-            
-            <div className="mb-6 p-3 bg-yellow-50 rounded-lg border border-yellow-200 text-left">
+
+            <div className="mb-6 p-3 bg-blue-50 rounded-lg border border-blue-200 text-left">
               <div className="flex items-start">
-                <span className="text-yellow-600 mr-2 flex-shrink-0">⚠</span>
+                <span className="text-blue-600 mr-2 flex-shrink-0">ℹ️</span>
                 <div className="flex-1">
-                  <p className="font-medium text-yellow-800 text-sm mb-1">Use the following email and password to login:</p>
-                  <p className="text-xs text-yellow-700 ml-3">Email: demouser@strator-ai.com</p>
-                  <p className="text-xs text-yellow-700 ml-3">Password: strator2025</p>
+                  <p className="font-medium text-blue-800 text-sm">Interactive Prototype</p>
+                  <p className="text-xs text-blue-700 mt-1">Enter any email and password to explore the demo.</p>
                 </div>
               </div>
             </div>
@@ -82,13 +81,13 @@ export default function LoginForm() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your registered email"
+                placeholder="Enter your email"
                 className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
                 required
                 data-testid="input-email"
               />
             </div>
-            
+
             <div>
               <Label htmlFor="password" className="block text-sm font-medium text-text-primary mb-2">
                 Password
@@ -116,7 +115,7 @@ export default function LoginForm() {
           </form>
         </CardContent>
       </Card>
-      
+
       <div className="text-center">
         <div className="border-t-2 border-slate-300 mb-4 mx-8"></div>
         <p className="text-xs text-slate-500">
