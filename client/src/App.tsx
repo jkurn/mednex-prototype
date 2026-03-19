@@ -19,6 +19,8 @@ import UserSettings from "@/pages/user-settings";
 import AdminSettings from "@/pages/admin-settings";
 import PolicyDetailPage from "@/pages/policy-detail";
 import DaftarPolisPage from "@/pages/daftar-polis";
+import AllDonePage from "@/pages/all-done";
+import FirstRun from "@/pages/first-run";
 import NotFound from "@/pages/not-found";
 import { AuthProvider } from "./hooks/useAuth";
 import { ClaimsProvider } from "./hooks/useClaimsData";
@@ -45,6 +47,8 @@ function Router() {
       <Route path="/provider/:id" component={ProviderDetailPage} />
       <Route path="/polis/:policyId" component={PolicyDetailPage} />
       <Route path="/settings/user" component={UserSettings} />
+      <Route path="/all-done" component={AllDonePage} />
+      <Route path="/first-run" component={FirstRun} />
       <Route component={NotFound} />
     </Switch>
   );

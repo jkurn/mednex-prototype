@@ -1,10 +1,9 @@
-import { useState, useEffect, useRef, useCallback, useLayoutEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRoute, useLocation } from "wouter";
-import { X, Save, CheckCircle, AlertTriangle, Clock, Circle, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, FileText, Loader2, Undo2, RotateCcw, ArrowRight, ZoomIn, ZoomOut, Download, Minus, Plus } from "lucide-react";
+import { Save, CheckCircle, AlertTriangle, Clock, Circle, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, FileText, Loader2, ArrowRight, Download, Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Claim } from "@shared/schema";
 import { useClaimsData } from "@/hooks/useClaimsData";
@@ -497,36 +496,122 @@ export default function ClaimReview() {
     navigate("/klaim");
   };
 
+  // Compute checkpoint pass/fail/warning counts for the top badge
+  const checkpointKeys = ['validitasPeserta', 'kelengkapanDokumen', 'ketepatanWaktu', 'pengecualianPolis', 'analisisKlaim', 'batasManfaat', 'keputusanAkhir'] as const;
+  const cpStatuses = claim.checkpointStatuses || checkpointStatuses;
+  const passedCount = checkpointKeys.filter(k => cpStatuses[k] === 'passed').length;
+  const totalCheckpoints = checkpointKeys.length;
+
+  // Determine if there are fraud flags
+  const hasFraudFlags = (claim.fraudFlags && claim.fraudFlags.length > 0) || (claim.fraudRisks && claim.fraudRisks.length > 0);
+
+  // Get overpriced items for the "Item Bermasalah" section
+  const overpricedItems = [
+    ...(claim.fraudFlags?.filter(f => f.type === 'OVERPRICING') || []),
+  ];
+  const priceAnalysisItems = claim.analysis?.priceAnalysis?.filter(p => p.flag === 'OVERPRICED') || [];
+
   return (
-    <Dialog open={true} onOpenChange={(open) => { if (!open) handleClose(); }}>
-      <DialogContent className="w-[96%] max-w-[2400px] h-[96vh] p-2 gap-0 rounded-lg" aria-describedby="dialog-description">
-        <DialogTitle className="sr-only">Review Klaim {claim ? `#${claim.id}` : ''}</DialogTitle>
-        <DialogDescription id="dialog-description" className="sr-only">
-          Halaman review komprehensif untuk klaim medis dengan 7 checkpoint validasi
-        </DialogDescription>
-        <div className="h-full bg-slate-50 flex flex-col overflow-hidden rounded-lg">
-          {/* Header - Fixed */}
-          <header className="bg-white border-b border-slate-200 flex-shrink-0 z-40">
-            <div className="px-6 py-4">
-          
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-xl font-bold text-slate-900" data-testid="text-patient-name">
-                  {patientDisplayName}
-                </h1>
-                <BenefitCategoryTag category={claim.benefitCategory || 'RAWAT JALAN'} />
-              </div>
-              
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-sm text-slate-700">{getAgeDisplay(patientAge)}</span>
-                <GenderTag gender={patientGender} />
-              </div>
-              
-              <p className="text-xs text-slate-500" data-testid="text-claim-id">
-                Claim #{claimId}
-              </p>
+    <div className="fixed inset-0 z-50 flex h-screen w-screen" style={{ fontFamily: 'var(--font-sans)' }}>
+
+      {/* ======================== LEFT PANE — Document / PDF ======================== */}
+      <div className="flex flex-col flex-shrink-0" style={{ width: '740px', backgroundColor: 'var(--sand-1000)' }}>
+        {/* Top toolbar (56px, white bg, bottom border) */}
+        <div className="flex items-center justify-between px-4 flex-shrink-0 border-b" style={{ height: '56px', backgroundColor: '#ffffff', borderColor: 'var(--sand-900)' }}>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleClose}
+              className="p-1.5 rounded-md hover:bg-sand-1000 transition-colors"
+              style={{ color: 'var(--sand-400)' }}
+              aria-label="Kembali ke daftar klaim"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <span className="font-mono text-sm font-semibold" style={{ color: 'var(--sand-200)' }} data-testid="text-claim-id">
+              Klaim #{claimId}
+            </span>
+            <span style={{ color: 'var(--sand-600)' }}>—</span>
+            <span className="text-sm" style={{ color: 'var(--sand-500)', fontFamily: 'var(--font-sans)' }}>
+              {claim.provider || 'Provider'}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            {hasFraudFlags && (
+              <Badge className="text-xs px-2.5 py-1 font-medium border-0" style={{ backgroundColor: 'var(--red-1100)', color: 'var(--red-500)' }}>
+                <AlertTriangle className="w-3 h-3 mr-1" />
+                Fraud Flag
+              </Badge>
+            )}
+          </div>
+        </div>
+
+        {/* PDF viewer area */}
+        <div className="flex-1 overflow-hidden flex flex-col">
+          {/* PDF controls bar */}
+          <div className="flex items-center justify-between px-4 py-2 border-b flex-shrink-0" style={{ backgroundColor: 'var(--sand-1100)', borderColor: 'var(--sand-900)' }}>
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => pdfViewerRef.current?.zoomOut()} disabled={pdfState.displayScale <= 0.5}>
+                <Minus className="w-3.5 h-3.5" />
+              </Button>
+              <span className="text-[11px] font-medium min-w-[36px] text-center" style={{ color: 'var(--sand-500)' }}>{Math.round(pdfState.displayScale * 100)}%</span>
+              <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => pdfViewerRef.current?.zoomIn()} disabled={pdfState.displayScale >= 3.0}>
+                <Plus className="w-3.5 h-3.5" />
+              </Button>
+
+              {!pdfState.isImage && pdfState.numPages > 1 && (
+                <>
+                  <div className="w-px h-5 mx-1" style={{ backgroundColor: 'var(--sand-800)' }} />
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => pdfViewerRef.current?.goToPage(pdfState.currentPage - 1)} disabled={pdfState.currentPage <= 1}>
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                  </Button>
+                  <span className="text-[11px] font-medium min-w-[32px] text-center" style={{ color: 'var(--sand-500)' }}>{pdfState.currentPage}/{pdfState.numPages}</span>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => pdfViewerRef.current?.goToPage(pdfState.currentPage + 1)} disabled={pdfState.currentPage >= pdfState.numPages}>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </Button>
+                </>
+              )}
             </div>
+            <div className="flex items-center gap-1">
+              {pdfState.hasFile && (
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={handleDownload}>
+                  <Download className="w-3.5 h-3.5" />
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* PDF document */}
+          <div className="flex-1 overflow-auto flex items-start justify-center p-6">
+            <div className="bg-white rounded-lg overflow-hidden" style={{ boxShadow: 'var(--shadow-lg)', maxWidth: '100%' }}>
+              <ClaimPdfViewer
+                ref={pdfViewerRef}
+                fileBase64={claim.originalFileBase64}
+                fileMimeType={claim.fileMimeType}
+                claimId={claimId}
+                onStateChange={setPdfState}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ======================== RIGHT PANE — AI Analysis ======================== */}
+      <div className="flex-1 flex flex-col overflow-hidden border-l" style={{ backgroundColor: '#ffffff', borderColor: 'var(--sand-900)' }} ref={containerRefMain}>
+
+        {/* Right pane top bar */}
+        <div className="flex items-center justify-between px-6 flex-shrink-0 border-b" style={{ height: '56px', borderColor: 'var(--sand-900)' }}>
+          <div className="flex items-center gap-3">
+            <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{ backgroundColor: 'var(--orange-600)' }}>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1L13 4.5V9.5L7 13L1 9.5V4.5L7 1Z" stroke="white" strokeWidth="1.5" fill="none"/><circle cx="7" cy="7" r="2" fill="white"/></svg>
+            </div>
+            <span className="text-sm font-semibold" style={{ color: 'var(--sand-200)', fontFamily: 'var(--font-display)' }}>
+              AI Analysis
+            </span>
+            <Badge className="text-xs px-2.5 py-0.5 font-medium border-0" style={{ backgroundColor: 'var(--sand-1000)', color: 'var(--sand-400)' }}>
+              {passedCount}/{totalCheckpoints} Checkpoints
+            </Badge>
+          </div>
+          <div className="flex items-center gap-2">
             {(() => {
               const hasDecision = checkpointStatuses.keputusanAkhir === 'passed' || checkpointStatuses.keputusanAkhir === 'failed' ||
                 claim.checkpointStatuses?.keputusanAkhir === 'passed' || claim.checkpointStatuses?.keputusanAkhir === 'failed';
@@ -534,37 +619,44 @@ export default function ClaimReview() {
               return (
                 <Button
                   variant="outline"
+                  size="sm"
                   onClick={handleExportLaporan}
                   disabled={isDisabled}
-                  className={`text-sm px-4 py-2 h-auto mr-8 ${hasDecision ? 'border-blue-500 text-blue-600 hover:bg-blue-50' : 'border-slate-300 text-slate-400 opacity-40'}`}
+                  className={`text-xs h-8 ${hasDecision ? 'border-blue-400 text-blue-600 hover:bg-blue-50' : 'opacity-40'}`}
                   data-testid="button-export-laporan"
                 >
-                  {isExporting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <FileText className="w-4 h-4 mr-1.5" />
-                      Download Laporan
-                    </>
-                  )}
+                  {isExporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5 mr-1" />}
+                  {isExporting ? 'Generating...' : 'Laporan'}
                 </Button>
               );
             })()}
           </div>
         </div>
-      </header>
 
-      <div className="flex flex-1 overflow-hidden" ref={containerRefMain}>
-        {/* Main Content - Scrollable - Left panel */}
-        <main className="overflow-y-auto overflow-x-hidden relative" style={{ width: `${100 - pdfPanelWidthPercent}%` }}>
-          <div className="px-4 py-3 border-b border-slate-200 sticky top-0 bg-white z-10">
-            <h3 className="text-sm font-semibold text-slate-900 text-left">Analisa Klaim</h3>
-          </div>
-          <div className="space-y-6 p-6 pb-40">
-            
+        {/* Scrollable analysis content */}
+        <main className="flex-1 overflow-y-auto overflow-x-hidden">
+          <div className="p-6 space-y-6 pb-40">
+
+            {/* AI Recommendation card (teal) */}
+            <div className="rounded-lg p-5 border" style={{ backgroundColor: '#E8F5F5', borderColor: '#B2DFDB' }}>
+              <div className="text-[10px] font-semibold tracking-widest uppercase mb-2" style={{ fontFamily: 'var(--font-mono)', color: '#00796B' }}>
+                REKOMENDASI AI
+              </div>
+              <div className="text-2xl font-bold mb-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--sand-200)' }}>
+                {(() => {
+                  const hasOvercharge = claim.fraudFlags?.some(f => f.type === 'OVERPRICING') || claim.analysis?.priceAnalysis?.some(p => p.flag === 'OVERPRICED');
+                  const cpStatus = claim.checkpointStatuses?.keputusanAkhir;
+                  if (cpStatus === 'failed') return 'Tolak';
+                  if (cpStatus === 'passed' && !hasOvercharge) return 'Approve Penuh';
+                  if (hasOvercharge) return 'Approve Sebagian';
+                  return 'Approve Penuh';
+                })()}
+              </div>
+              <div className="text-sm" style={{ color: '#00796B' }}>
+                {formatRupiah(getAiRecommendedAmount())} dari {formatRupiah(cp5TotalCharged ?? claim.amount)} yang diajukan
+              </div>
+            </div>
+
             {/* Hero Claim Summary Card */}
             <HeroClaimSummary claim={claim} originalTotalCharged={cp5TotalCharged} />
             
@@ -1098,139 +1190,46 @@ export default function ClaimReview() {
           </div>
         </main>
 
-        {/* Resizable Divider */}
-        <div
-          className="w-2 flex-shrink-0 bg-slate-200 hover:bg-blue-400 active:bg-blue-500 transition-colors cursor-col-resize relative group"
-          onMouseDown={handleResizeMouseDown}
-          data-testid="panel-resizer"
-        >
-          <div className="absolute inset-y-0 -left-1 -right-1" />
-        </div>
-
-        {/* Right Pane - PDF Viewer */}
-        <aside className="flex-shrink-0 overflow-hidden flex flex-col" style={{ width: `${pdfPanelWidthPercent}%`, minWidth: '300px' }}>
-          <div className="px-4 py-2 border-b border-slate-200 bg-white flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-slate-900 text-left flex-shrink-0">Dokumen Klaim</h3>
-            <div className="flex items-center gap-1">
-              {/* Zoom controls */}
-              <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => pdfViewerRef.current?.zoomOut()} disabled={pdfState.displayScale <= 0.5}>
-                <Minus className="w-3.5 h-3.5" />
-              </Button>
-              <span className="text-[11px] font-medium text-slate-600 min-w-[36px] text-center">{Math.round(pdfState.displayScale * 100)}%</span>
-              <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => pdfViewerRef.current?.zoomIn()} disabled={pdfState.displayScale >= 3.0}>
-                <Plus className="w-3.5 h-3.5" />
-              </Button>
-
-              {/* Page nav */}
-              {!pdfState.isImage && pdfState.numPages > 1 && (
-                <>
-                  <div className="w-px h-5 bg-slate-200 mx-1" />
-                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => pdfViewerRef.current?.goToPage(pdfState.currentPage - 1)} disabled={pdfState.currentPage <= 1}>
-                    <ChevronLeft className="w-3.5 h-3.5" />
-                  </Button>
-                  <span className="text-[11px] font-medium text-slate-600 min-w-[32px] text-center">{pdfState.currentPage}/{pdfState.numPages}</span>
-                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => pdfViewerRef.current?.goToPage(pdfState.currentPage + 1)} disabled={pdfState.currentPage >= pdfState.numPages}>
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </Button>
-                </>
-              )}
-
-              {/* Download */}
-              {pdfState.hasFile && (
-                <>
-                  <div className="w-px h-5 bg-slate-200 mx-1" />
-                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={handleDownload}>
-                    <Download className="w-3.5 h-3.5" />
-                  </Button>
-                </>
+        {/* Bottom Action Bar — sticky to right pane */}
+        <div className="flex-shrink-0 border-t px-6 py-4" style={{ borderColor: 'var(--sand-900)', backgroundColor: '#ffffff' }}>
+          <div className="flex items-center gap-4">
+            {/* Summary amounts */}
+            <div className="flex-shrink-0 mr-2">
+              <div className="text-[10px] leading-tight" style={{ color: 'var(--sand-500)' }}>Total Diajukan</div>
+              <div className="text-sm font-bold" style={{ color: 'var(--sand-300)' }}>{formatRupiah(cp5TotalCharged ?? claim.amount)}</div>
+              {getRejectedItemsNote() && (
+                <div className="text-[10px] leading-tight" style={{ color: 'var(--sand-600)' }}>{getRejectedItemsNote()}</div>
               )}
             </div>
-          </div>
-          <div className="flex-1 overflow-hidden">
-            <ClaimPdfViewer 
-              ref={pdfViewerRef}
-              fileBase64={claim.originalFileBase64}
-              fileMimeType={claim.fileMimeType}
-              claimId={claimId}
-              onStateChange={setPdfState}
-            />
-          </div>
-        </aside>
-      </div>
-
-      {/* Bottom Action Bar */}
-      <div className="bg-white border-t border-slate-200 flex-shrink-0 z-40">
-        <div className="flex items-center px-6 py-3 gap-4">
-          {/* Total Diajukan */}
-          <div className="flex-shrink-0">
-            <div className="text-[10px] text-slate-500 leading-tight">Total Diajukan</div>
-            <div className="text-sm font-bold text-slate-700">{formatRupiah(cp5TotalCharged ?? claim.amount)}</div>
-            {getRejectedItemsNote() && (
-              <div className="text-[10px] text-slate-400 leading-tight">{getRejectedItemsNote()}</div>
-            )}
-          </div>
-
-          <ArrowRight className="w-4 h-4 text-slate-400 flex-shrink-0" />
-
-          {/* Total Disetujui */}
-          <div className="flex-shrink-0">
-            <div className="text-[10px] text-slate-500 leading-tight">Total Disetujui</div>
-            <div className="text-sm font-bold text-green-600">{formatRupiah(getApprovedAmount())}</div>
-          </div>
-
-          <div className="w-px h-10 bg-slate-200 flex-shrink-0 mx-2" />
-
-          {/* Edit info section */}
-          <div className="flex flex-col items-center gap-1 flex-shrink-0">
-            <Badge variant="outline" className="text-xs px-3 py-0.5 font-medium text-slate-600 border-slate-300">
-              {overrideCount} perubahanmu
-            </Badge>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={handleUndo}
-                className={`text-xs flex items-center gap-1 transition-colors ${hasEdits ? 'text-slate-600 hover:text-slate-800' : 'text-slate-300 cursor-not-allowed'}`}
-                disabled={!hasEdits}
-              >
-                <Undo2 className="w-3.5 h-3.5" />
-                Undo
-              </button>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <button
-                    className={`text-xs flex items-center gap-1 transition-colors ${hasEdits ? 'text-slate-600 hover:text-slate-800' : 'text-slate-300 cursor-not-allowed'}`}
-                    disabled={!hasEdits}
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    Reset
-                  </button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Reset semua perubahan?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Apakah Anda yakin ingin mereset semua perubahan? Ini tidak dapat dibatalkan.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Batal</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleReset}>Reset</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+            <ArrowRight className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--sand-600)' }} />
+            <div className="flex-shrink-0">
+              <div className="text-[10px] leading-tight" style={{ color: 'var(--sand-500)' }}>Total Disetujui</div>
+              <div className="text-sm font-bold" style={{ color: 'var(--green-500)' }}>{formatRupiah(getApprovedAmount())}</div>
             </div>
-          </div>
 
-          {/* Decision buttons - far right */}
-          <div className="flex items-center gap-4 ml-auto flex-shrink-0">
-            {/* Tolak Klaim */}
+            {/* Spacer */}
+            <div className="flex-1" />
+
+            {/* Eskalasi ghost button */}
+            <button
+              onClick={handleUndo}
+              className="h-10 px-5 rounded-lg text-sm font-medium transition-colors"
+              style={{ color: 'var(--sand-500)' }}
+              disabled={!hasEdits}
+            >
+              Eskalasi
+            </button>
+
+            {/* Tolak outline button */}
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <button
-                  className="h-[78px] min-w-[160px] px-6 rounded-[10px] border-2 border-red-300 text-red-600 font-semibold text-sm hover:bg-red-50 hover:border-red-400 transition-colors"
+                  className="h-10 px-5 rounded-lg text-sm font-semibold border-2 transition-colors hover:opacity-90"
+                  style={{ borderColor: 'var(--red-600)', color: 'var(--red-500)', backgroundColor: 'transparent' }}
                   data-testid="button-tolak-klaim"
                   aria-label="Tolak klaim, approve Rp0"
                 >
-                  Tolak Klaim
+                  Tolak
                 </button>
               </AlertDialogTrigger>
               <AlertDialogContent>
@@ -1255,9 +1254,10 @@ export default function ClaimReview() {
               </AlertDialogContent>
             </AlertDialog>
 
-            {/* Approve */}
+            {/* Approve Sebagian / Approve — primary orange button */}
             <button
-              className="h-[78px] min-w-[220px] px-6 rounded-[10px] bg-emerald-600 hover:bg-emerald-700 text-white transition-colors text-center flex flex-col items-center justify-center"
+              className="h-10 px-6 rounded-lg text-sm font-semibold text-white transition-colors hover:opacity-90"
+              style={{ backgroundColor: 'var(--orange-600)' }}
               data-testid="button-approve"
               aria-label={hasEdits
                 ? `Approve ${formatRupiah(getApprovedAmount())}, sesuai ${overrideCount} perubahan Anda`
@@ -1276,19 +1276,15 @@ export default function ClaimReview() {
                 navigate("/klaim");
               }}
             >
-              <span className="text-sm font-semibold">Approve</span>
-              <span className="text-xl font-bold mt-0.5">
-                {formatRupiah(hasEdits ? getApprovedAmount() : getAiRecommendedAmount())}
-              </span>
-              <span className="text-xs opacity-85">
-                {hasEdits ? 'Sesuai perubahanmu' : 'Sesuai rekomendasi AI'}
-              </span>
+              {(() => {
+                const hasOvercharge = claim.fraudFlags?.some(f => f.type === 'OVERPRICING') || claim.analysis?.priceAnalysis?.some(p => p.flag === 'OVERPRICED');
+                return hasOvercharge ? 'Approve Sebagian' : 'Approve';
+              })()}
             </button>
           </div>
         </div>
       </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+
+    </div>
   );
 }

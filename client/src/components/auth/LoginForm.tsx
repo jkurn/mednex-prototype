@@ -3,7 +3,6 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -47,81 +46,171 @@ export default function LoginForm() {
     }
   };
 
+  const handleDemoLogin = async () => {
+    setIsLoading(true);
+    try {
+      const success = await login("demo@mednex.id", "demo");
+      if (success) {
+        sessionStorage.removeItem('dashboardScrollPosition');
+        toast({
+          title: "Login Successful",
+          description: "Welcome to Strator MedNex",
+        });
+        setLocation("/dashboard");
+      }
+    } catch (error) {
+      toast({
+        title: "Login Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <div className="max-w-md w-full space-y-6">
-      <Card className="shadow-xl border border-slate-200">
-        <CardContent className="p-8">
-          <div className="text-center mb-8">
-            <div className="border-t-2 border-slate-300 mb-6"></div>
-            <div className="mb-2 flex justify-center items-baseline">
-              <h1 className="text-3xl text-text-primary" style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif', fontWeight: 'bold' }}>Strator MedNex</h1>
-              <sup className="text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded-full font-normal ml-2">Demo</sup>
-            </div>
-            <p className="text-slate-600 text-base mb-4">Health Claims Intelligence Platform</p>
-            <div className="border-b-2 border-slate-300 mb-6"></div>
+    <div className="w-full" style={{ maxWidth: 400 }}>
+      {/* Title */}
+      <h2
+        className="text-heading-xl font-bold mb-2"
+        style={{
+          color: "var(--sand-200)",
+          fontFamily: "var(--font-display)",
+        }}
+      >
+        Selamat datang kembali
+      </h2>
+      <p
+        className="text-body-m mb-8"
+        style={{ color: "var(--sand-600)" }}
+      >
+        Masuk ke akun MedNex Anda
+      </p>
 
-            <div className="mb-6 p-3 bg-blue-50 rounded-lg border border-blue-200 text-left">
-              <div className="flex items-start">
-                <span className="text-blue-600 mr-2 flex-shrink-0">ℹ️</span>
-                <div className="flex-1">
-                  <p className="font-medium text-blue-800 text-sm">Interactive Prototype</p>
-                  <p className="text-xs text-blue-700 mt-1">Enter any email and password to explore the demo.</p>
-                </div>
-              </div>
-            </div>
-          </div>
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div>
+          <Label
+            htmlFor="email"
+            className="block text-sm font-medium mb-2"
+            style={{ color: "var(--sand-200)" }}
+          >
+            Email
+          </Label>
+          <Input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="nama@perusahaan.co.id"
+            className="w-full px-4 py-3 rounded-lg transition-all duration-200"
+            style={{
+              backgroundColor: "#FFFFFF",
+              border: "1px solid var(--sand-800)",
+              color: "var(--sand-200)",
+            }}
+            required
+            data-testid="input-email"
+          />
+        </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <Label htmlFor="email" className="block text-sm font-medium text-text-primary mb-2">
-                Email Address
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
-                required
-                data-testid="input-email"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="password" className="block text-sm font-medium text-text-primary mb-2">
-                Password
-              </Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
-                required
-                data-testid="input-password"
-              />
-            </div>
-
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="w-full btn-primary py-3 px-4 rounded-lg font-medium"
-              data-testid="button-signin"
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <Label
+              htmlFor="password"
+              className="text-sm font-medium"
+              style={{ color: "var(--sand-200)" }}
             >
-              {isLoading ? "Signing In..." : "Sign In to Dashboard"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+              Password
+            </Label>
+            <button
+              type="button"
+              className="text-sm font-medium hover:underline"
+              style={{ color: "var(--orange-600)" }}
+            >
+              Lupa Password?
+            </button>
+          </div>
+          <Input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Masukkan password Anda"
+            className="w-full px-4 py-3 rounded-lg transition-all duration-200"
+            style={{
+              backgroundColor: "#FFFFFF",
+              border: "1px solid var(--sand-800)",
+              color: "var(--sand-200)",
+            }}
+            required
+            data-testid="input-password"
+          />
+        </div>
 
-      <div className="text-center">
-        <div className="border-t-2 border-slate-300 mb-4 mx-8"></div>
-        <p className="text-xs text-slate-500">
-          Strator MedNex is developed by PT Strator Technologies Indonesia
-        </p>
-        <div className="border-b-2 border-slate-300 mt-4 mx-8"></div>
+        {/* Primary submit button */}
+        <Button
+          type="submit"
+          disabled={isLoading}
+          className="w-full py-3 px-4 rounded-lg font-semibold text-white"
+          style={{
+            backgroundColor: "var(--orange-600)",
+            borderRadius: 8,
+          }}
+          data-testid="button-signin"
+        >
+          {isLoading ? "Memproses..." : "Masuk"}
+        </Button>
+      </form>
+
+      {/* Demo button */}
+      <button
+        type="button"
+        onClick={handleDemoLogin}
+        disabled={isLoading}
+        className="w-full mt-3 py-3 px-4 rounded-lg font-semibold transition-all duration-200 hover:bg-sand-1000"
+        style={{
+          border: "1px solid var(--sand-800)",
+          borderRadius: 8,
+          color: "var(--sand-200)",
+          backgroundColor: "transparent",
+        }}
+      >
+        Masuk dengan akun demo
+      </button>
+
+      {/* Info box */}
+      <div
+        className="mt-6 p-4 rounded-lg flex items-start gap-3"
+        style={{
+          backgroundColor: "#EFF6FF",
+          border: "1px solid #BFDBFE",
+        }}
+      >
+        <svg
+          className="flex-shrink-0 mt-0.5"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#3B82F6"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 16v-4" />
+          <path d="M12 8h.01" />
+        </svg>
+        <div>
+          <p className="text-sm font-medium" style={{ color: "#1E40AF" }}>
+            Interactive Prototype
+          </p>
+          <p className="text-xs mt-1" style={{ color: "#1D4ED8" }}>
+            Enter any email and password to explore the platform.
+          </p>
+        </div>
       </div>
     </div>
   );
