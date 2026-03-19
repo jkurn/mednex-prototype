@@ -93,7 +93,7 @@ export default function ClaimsActivityFeed() {
         {!isLoading && activities.length > 5 && (
           <div className="flex justify-center pt-4">
             <button
-              onClick={() => alert("Fitur Lihat Semua Aktivitas Klaim belum tersedia")}
+              onClick={() => window.location.assign((import.meta.env.BASE_URL || '/') + 'klaim')}
               className="px-4 py-2 text-xs font-medium text-slate-600 border border-slate-200 rounded hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900 transition-all"
               data-testid="button-view-all-claim-activities"
             >

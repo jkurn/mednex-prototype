@@ -8,6 +8,7 @@ import Dashboard from "@/pages/dashboard";
 import KepalaDashboard from "@/pages/kepala-dashboard";
 import ManajerDashboard from "@/pages/manajer-dashboard";
 import ProcessingFeed from "@/pages/processing-feed";
+import ClaimReview from "@/pages/claim-review";
 import Reports from "@/pages/reports";
 import NeedsAttentionPage from "@/pages/needs-attention";
 import PemegangPolisPage from "@/pages/pemegang-polis";
@@ -35,6 +36,7 @@ function Router() {
       <Route path="/reports" component={Reports} />
       <Route path="/klaim" component={NeedsAttentionPage} />
       <Route path="/klaim/:id" component={NeedsAttentionPage} />
+      <Route path="/klaim/:id/review" component={ClaimReview} />
       <Route path="/needs-attention" component={NeedsAttentionPage} />
       <Route path="/pemegang-polis" component={PemegangPolisPage} />
       <Route path="/daftar-peserta" component={DaftarPesertaPage} />

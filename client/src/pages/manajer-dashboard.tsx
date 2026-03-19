@@ -39,14 +39,14 @@ export default function ManajerDashboard() {
           <button onClick={() => navigate("/manajer")} className="w-full flex items-center gap-3 px-4 h-10 rounded-lg bg-[var(--sidebar-accent)] text-[#FEFCF4] text-sm font-medium">
             <BarChart3 className="w-4 h-4 text-[var(--primary)]" /> Command Center
           </button>
-          <button onClick={() => navigate("/manajer/laporan")} className="w-full flex items-center gap-3 px-4 h-10 rounded-lg text-[var(--sidebar-foreground)] text-sm hover:bg-[var(--sidebar-accent)] transition">
+          <button onClick={() => navigate("/reports")} className="w-full flex items-center gap-3 px-4 h-10 rounded-lg text-[var(--sidebar-foreground)] text-sm hover:bg-[var(--sidebar-accent)] transition">
             <FileText className="w-4 h-4" /> Laporan
           </button>
           <p className="px-4 py-2 mt-4 text-[10px] font-semibold tracking-[2px] text-[var(--sidebar-foreground)]">MANAJEMEN</p>
           <button onClick={() => navigate("/provider-tarif")} className="w-full flex items-center gap-3 px-4 h-10 rounded-lg text-[var(--sidebar-foreground)] text-sm hover:bg-[var(--sidebar-accent)] transition">
             <Building2 className="w-4 h-4" /> Provider
           </button>
-          <button onClick={() => navigate("/manajer/polis")} className="w-full flex items-center gap-3 px-4 h-10 rounded-lg text-[var(--sidebar-foreground)] text-sm hover:bg-[var(--sidebar-accent)] transition">
+          <button onClick={() => navigate("/pemegang-polis")} className="w-full flex items-center gap-3 px-4 h-10 rounded-lg text-[var(--sidebar-foreground)] text-sm hover:bg-[var(--sidebar-accent)] transition">
             <Shield className="w-4 h-4" /> Polis
           </button>
           <button onClick={() => navigate("/daftar-peserta")} className="w-full flex items-center gap-3 px-4 h-10 rounded-lg text-[var(--sidebar-foreground)] text-sm hover:bg-[var(--sidebar-accent)] transition">
